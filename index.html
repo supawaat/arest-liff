@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>aRest - ตรวจทานบิลตลาดสด (ตัวหนังสือใหญ่)</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Sarabun", "Noto Sans Thai", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding-bottom: 120px;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    /* Top Sticky App Bar */
+    .app-bar {
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 50;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge-logo {
+      background: var(--primary);
+      color: white;
+      font-weight: 800;
+      font-size: 18px;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+    .app-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .slip-id-tag {
+      font-size: 14px;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* Bill Metadata Card */
+    .meta-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .store-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Giant Total Box */
+    .hero-box {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 2px solid #bfdbfe;
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .hero-label {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1e40af;
+      margin-bottom: 4px;
+    }
+    .hero-amount {
+      font-size: 40px;
+      font-weight: 900;
+      color: #1e3a8a;
+      letter-spacing: -0.5px;
+    }
+
+    /* Alert Banner */
+    .drift-alert {
+      background: var(--danger-bg);
+      border: 2px solid #fca5a5;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .drift-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+    .drift-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #991b1b;
+      margin-bottom: 2px;
+    }
+    .drift-desc {
+      font-size: 15px;
+      color: #b91c1c;
+    }
+
+    .section-heading {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sub-guide {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    /* Line Item Cards */
+    .items-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .item-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 20px;
+      transition: all 0.2s ease;
+    }
+    .item-card.has-drift {
+      border-color: #fca5a5;
+      background: #fffafa;
+    }
+    .item-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .item-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .badge {
+      font-size: 14px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+    .badge-drift {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+    .badge-ok {
+      background: #dcfce7;
+      color: var(--success);
+    }
+
+    /* Card Input Controls (Large Touch Targets) */
+    .calc-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: #f8fafc;
+      padding: 12px 14px;
+      border-radius: 12px;
+    }
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .large-input {
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+      padding: 8px 10px;
+      border: 2px solid #cbd5e1;
+      border-radius: 10px;
+      background: white;
+      color: var(--text-main);
+      width: 80px;
+    }
+    .price-input {
+      width: 95px;
+    }
+    .input-unit {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .item-total-display {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-main);
+      text-align: right;
+      min-width: 100px;
+    }
+
+    /* Fixed Bottom Action Bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 2px solid var(--border);
+      padding: 14px 20px;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+      z-index: 100;
+    }
+    .bottom-content {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .bottom-total-col {
+      display: flex;
+      flex-direction: column;
+    }
+    .bottom-total-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .bottom-total-val {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text-main);
+    }
+    .btn-confirm {
+      flex: 1;
+      background: var(--success);
+      color: white;
+      font-size: 20px;
+      font-weight: 800;
+      padding: 16px 20px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3);
+    }
+    .btn-confirm:active {
+      transform: scale(0.98);
+      background: #15803d;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 30px;
+      font-size: 17px;
+      font-weight: 600;
+      display: none;
+      z-index: 200;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-bar">
+    <div class="app-brand">
+      <span class="badge-logo">aRest</span>
+      <span class="app-title">ตรวจทานบิล</span>
+    </div>
+    <span class="slip-id-tag">#SLIP-20261012</span>
+  </header>
+
+  <div class="container">
+    <!-- Metadata Card -->
+    <div class="meta-card">
+      <div class="store-title">ร้านโกฮับ ข้าวมันไก่ & กะเพรา</div>
+      <div class="meta-row">
+        <span>คู่ค้า: แผงหมูป้าเพ็ญ ตลาดสด</span>
+        <span>12 ต.ค. 2026 (06:45 น.)</span>
+      </div>
+    </div>
+
+    <!-- Giant Total Box -->
+    <div class="hero-box">
+      <div class="hero-label">ยอดรวมตรวจนับได้จากบิล</div>
+      <div class="hero-amount" id="grand-total">1,420.00 ฿</div>
+    </div>
+
+    <!-- Alert Box -->
+    <div class="drift-alert">
+      <div class="drift-icon">⚠️</div>
+      <div>
+        <div class="drift-title">ตรวจพบวัตถุดิบปรับราคาขึ้น</div>
+        <div class="drift-desc">หมู 3 ชั้น เดิม 120 ฿ → วันนี้ 140 ฿ (+16.7%) กระทบเมนูกะเพราหมูกรอบ</div>
+      </div>
+    </div>
+
+    <!-- Line Items Section -->
+    <div class="section-heading">
+      <span>รายการวัตถุดิบ (แตะแก้ไขได้)</span>
+      <span class="sub-guide">แตะที่ช่องตัวเลขเพื่อปรับค่า</span>
+    </div>
+
+    <div class="items-stack">
+      <!-- Item 1: หมู 3 ชั้น -->
+      <div class="item-card has-drift" data-id="1">
+        <div class="item-card-header">
+          <span class="item-title">หมู 3 ชั้น</span>
+          <span class="badge badge-drift">▲ แพงขึ้น +16.7%</span>
+        </div>
+        <div class="calc-row">
+          <div class="qty-control">
+            <input type="number" step="0.1" class="large-input" value="5.0" id="qty-1" oninput="recalc(1)">
+            <span class="input-unit">กก.</span>
+          </div>
+          <span class="input-unit">×</span>
+          <div class="qty-control">
+            <input type="number" step="1" class="large-input price-input" value="140.0" id="price-1" oninput="recalc(1)">
+            <span class="input-unit">฿</span>
+          </div>
+          <div class="item-total-display" id="total-1">700.00 ฿</div>
+        </div>
+      </div>
+
+      <!-- Item 2: สันคอหมู -->
+      <div class="item-card" data-id="2">
+        <div class="item-card-header">
+          <span class="item-title">สันคอหมู</span>
+          <span class="badge badge-ok">● ราคาปกติ</span>
+        </div>
+        <div class="calc-row">
+          <div class="qty-control">
+            <input type="number" step="0.1" class="large-input" value="5.0" id="qty-2" oninput="recalc(2)">
+            <span class="input-unit">กก.</span>
+          </div>
+          <span class="input-unit">×</span>
+          <div class="qty-control">
+            <input type="number" step="1" class="large-input price-input" value="135.0" id="price-2" oninput="recalc(2)">
+            <span class="input-unit">฿</span>
+          </div>
+          <div class="item-total-display" id="total-2">675.00 ฿</div>
+        </div>
+      </div>
+
+      <!-- Item 3: พริกจินดาแดง -->
+      <div class="item-card" data-id="3">
+        <div class="item-card-header">
+          <span class="item-title">พริกจินดาแดง</span>
+          <span class="badge badge-ok">● ราคาปกติ</span>
+        </div>
+        <div class="calc-row">
+          <div class="qty-control">
+            <input type="number" step="0.1" class="large-input" value="2.0" id="qty-3" oninput="recalc(3)">
+            <span class="input-unit">ขีด</span>
+          </div>
+          <span class="input-unit">×</span>
+          <div class="qty-control">
+            <input type="number" step="1" class="large-input price-input" value="15.0" id="price-3" oninput="recalc(3)">
+            <span class="input-unit">฿</span>
+          </div>
+          <div class="item-total-display" id="total-3">30.00 ฿</div>
+        </div>
+      </div>
+
+      <!-- Item 4: ใบกะเพรา -->
+      <div class="item-card" data-id="4">
+        <div class="item-card-header">
+          <span class="item-title">ใบกะเพรา</span>
+          <span class="badge badge-ok">● ราคาปกติ</span>
+        </div>
+        <div class="calc-row">
+          <div class="qty-control">
+            <input type="number" step="1" class="large-input" value="3.0" id="qty-4" oninput="recalc(4)">
+            <span class="input-unit">กำ</span>
+          </div>
+          <span class="input-unit">×</span>
+          <div class="qty-control">
+            <input type="number" step="1" class="large-input price-input" value="5.0" id="price-4" oninput="recalc(4)">
+            <span class="input-unit">฿</span>
+          </div>
+          <div class="item-total-display" id="total-4">15.00 ฿</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sticky Bottom Navigation Bar -->
+  <footer class="bottom-bar">
+    <div class="bottom-content">
+      <div class="bottom-total-col">
+        <span class="bottom-total-label">ยอดสุทธิ</span>
+        <span class="bottom-total-val" id="bar-total">1,420.00 ฿</span>
+      </div>
+      <button class="btn-confirm" onclick="confirmBill()">
+        ✓ ยืนยันข้อมูลถูกต้อง
+      </button>
+    </div>
+  </footer>
+
+  <!-- Confirmation Toast -->
+  <div id="toast" class="toast">✓ บันทึกและคำนวณต้นทุนเรียบร้อย</div>
+
+  <script>
+    function recalc(id) {
+      const qty = parseFloat(document.getElementById(`qty-${id}`).value) || 0;
+      const price = parseFloat(document.getElementById(`price-${id}`).value) || 0;
+      const lineTotal = qty * price;
+      
+      document.getElementById(`total-${id}`).innerText = lineTotal.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ฿';
+      updateGrandTotal();
+    }
+
+    function updateGrandTotal() {
+      let sum = 0;
+      for (let i = 1; i <= 4; i++) {
+        const qty = parseFloat(document.getElementById(`qty-${i}`).value) || 0;
+        const price = parseFloat(document.getElementById(`price-${i}`).value) || 0;
+        sum += (qty * price);
+      }
+      const formatted = sum.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ฿';
+      document.getElementById('grand-total').innerText = formatted;
+      document.getElementById('bar-total').innerText = formatted;
+    }
+
+    function confirmBill() {
+      const toast = document.getElementById('toast');
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+        // Close LIFF window in production
+        if (window.liff) {
+          window.liff.closeWindow();
+        }
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
