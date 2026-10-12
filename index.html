@@ -46,7 +46,7 @@
 <body>
   <header class="app-bar">
     <div><span class="badge-logo">aRest</span><span class="app-title">ตรวจทานบิล</span></div>
-    <span style="font-size:14px; color:#64748b;">#LIVE-DATA</span>
+    <span style="font-size:14px; color:#64748b;" id="slip-badge">#LIVE-DATA</span>
   </header>
 
   <div class="container">
@@ -68,7 +68,9 @@
       <span style="font-size:14px; color:#64748b;">แตะที่ช่องตัวเลขเพื่อปรับค่า</span>
     </div>
 
-    <div class="items-stack" id="items-container"></div>
+    <div class="items-stack" id="items-container">
+      <div style="text-align:center; padding:30px; color:#64748b;">กำลังโหลดข้อมูลรายการบิล...</div>
+    </div>
   </div>
 
   <footer class="bottom-bar">
@@ -88,16 +90,19 @@
 
     function initPage() {
       const urlParams = new URLSearchParams(window.location.search);
-      const dataParam = urlParams.get('d');
+      const slipId = urlParams.get('id');
 
-      if (dataParam) {
-        try {
-          const parsed = JSON.parse(decodeURIComponent(dataParam));
-          renderSlip(parsed);
-          return;
-        } catch (e) {
-          console.error("Decode error:", e);
-        }
+      if (slipId) {
+        fetch(`https://arest-backend.onrender.com/api/slip/${slipId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.items && data.items.length > 0) {
+              renderSlip(data);
+            }
+          })
+          .catch(err => {
+            console.error("Fetch error:", err);
+          });
       }
     }
 
